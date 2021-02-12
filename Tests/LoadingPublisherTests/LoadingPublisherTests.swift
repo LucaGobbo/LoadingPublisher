@@ -215,13 +215,11 @@ final class LoadingPublisherTests: XCTestCase {
     }
 
     static var allTests = [
-        (
-            ("testLoadingPublisherToValues", testLoadingPublisherToValues),
-            ("testLoadingPublisherToFailures", testLoadingPublisherToFailures),
-            ("testLoadingPublisherToLoaded", testLoadingPublisherToLoaded),
-            ("testLoadingPublisherToIsLoading", testLoadingPublisherToIsLoading),
-            ("testFailure", testFailure),
-            ("testErasingToAnyLoadingPublisherShouldPrependLoadingState", testErasingToAnyLoadingPublisherShouldPrependLoadingState)
-        )
+        ("testLoadingPublisherToValues", testLoadingPublisherToValues),
+        ("testLoadingPublisherToFailures", testLoadingPublisherToFailures),
+        ("testLoadingPublisherToLoaded", testLoadingPublisherToLoaded),
+        ("testLoadingPublisherToIsLoading", testLoadingPublisherToIsLoading),
+        ("testFailure", testFailure),
+        ("testErasingToAnyLoadingPublisherShouldPrependLoadingState", testErasingToAnyLoadingPublisherShouldPrependLoadingState)
     ]
 }
