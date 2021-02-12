@@ -8,13 +8,13 @@ Loading abstraction for Combine Publishers
 LoadingPublisher is distributed using the [Swift Package Manager](https://swift.org/package-manager). To install it into a project, simply add it as a dependency within your Package.swift manifest:
 
 let package = Package(
-    ```
+```swift
     ...
     dependencies: [
         .package(url: "https://github.com/LucaGobbo/LoadingPublisher", from: "0.0.1"),
     ],
     ...)
-    ```
+```
 
 Then import LoadingPublisher wherever you'd like to use it:
 
