@@ -2,3 +2,4 @@
 .swiftpm/xcode/xcuserdata/
 LoadingPublisher/.swiftpm
 .swiftpm
+.build
