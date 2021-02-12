@@ -9,11 +9,13 @@ LoadingPublisher is distributed using the [Swift Package Manager](https://swift.
 
 let package = Package(
 ```swift
+let package = Package(
     ...
     dependencies: [
         .package(url: "https://github.com/LucaGobbo/LoadingPublisher", from: "0.0.1"),
     ],
-    ...)
+    ...
+)
 ```
 
 Then import LoadingPublisher wherever you'd like to use it:
