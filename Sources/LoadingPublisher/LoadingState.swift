@@ -28,8 +28,11 @@ public extension LoadingState {
         guard case let .failure(failure) = self else { return nil }
         return failure
     }
+
     var loaded: Bool {
         guard case .loaded = self else { return false }
         return true
     }
 }
+
+extension LoadingState: Equatable where Output: Equatable, Failure: Equatable {}
