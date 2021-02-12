@@ -47,11 +47,4 @@ public extension Publisher {
             .prepend(.loading)
             .eraseToAnyPublisher()
     }
-
-    /// Map a Publisher to `AnyLoadingSignal`
-    func eraseToAnyLoadingNotPrependLoadingPublisher() -> AnyLoadingPublisher<Output, Failure> {
-        map { LoadingState<Output, Failure>.loaded($0) }
-            .catch { Just(LoadingState<Output, Failure>.failure($0)) }
-            .eraseToAnyPublisher()
-    }
 }
