@@ -36,6 +36,54 @@ public extension Publisher where Failure == Never {
     {
         map(\.isLoading).eraseToAnyPublisher()
     }
+
+    func mapLoadingOutput<NewOutput, LoadingOutput, LoadingError: Swift.Error>(
+        _ transform: @escaping ((LoadingOutput) -> NewOutput))
+        -> AnyLoadingPublisher<NewOutput, LoadingError>
+        where Output == LoadingState<LoadingOutput, LoadingError>
+    {
+        return map { element in
+
+            switch element {
+            case .loading: return .loading
+            case let .failure(error): return .failure(error)
+            case let .loaded(value): return .loaded(transform(value))
+            }
+        }
+        .eraseToAnyPublisher()
+    }
+
+    func mapLoadingFailure<NewFailure: Error, LoadingOutput, LoadingError: Swift.Error>(
+        _ transform: @escaping ((LoadingError) -> NewFailure))
+        -> AnyLoadingPublisher<LoadingOutput, NewFailure>
+        where Output == LoadingState<LoadingOutput, LoadingError>
+    {
+        return map { element in
+
+            switch element {
+            case .loading: return .loading
+            case let .failure(error): return .failure(transform(error))
+            case let .loaded(value): return .loaded(value)
+            }
+        }
+        .eraseToAnyPublisher()
+    }
+
+    func flatMapLatestLoading<NewOutput, LoadingOutput, LoadingError: Swift.Error>(
+        _ transform: @escaping ((LoadingOutput) -> AnyLoadingPublisher<NewOutput, LoadingError>))
+        -> AnyLoadingPublisher<NewOutput, LoadingError>
+        where Output == LoadingState<LoadingOutput, LoadingError>
+    {
+        map { (value: LoadingState<LoadingOutput, LoadingError>) -> AnyLoadingPublisher<NewOutput, LoadingError> in
+            switch value {
+            case let .failure(error): return .failure(error)
+            case let .loaded(value): return transform(value)
+            case .loading: return .loading()
+            }
+        }
+        .switchToLatest()
+        .eraseToAnyPublisher()
+    }
 }
 
 public extension Publisher {
