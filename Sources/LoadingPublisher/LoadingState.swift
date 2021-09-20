@@ -1,13 +1,25 @@
 //
-//  File.swift
+//  LoadingState.swift
 //
 //
 //  Created by Luca Gobbo on 26/01/2021.
 //
-
+import Combine
 import Foundation
 
-public enum LoadingState<Output, Failure: Swift.Error> {
+/// Represents loading state of a value. Element of LoadingSignal.
+public protocol LoadingStateProtocol {
+    associatedtype LoadingOutput
+    associatedtype LoadingFailure: Error
+    var asLoadingState: LoadingState<LoadingOutput, LoadingFailure> { get }
+}
+
+public enum LoadingState<Output, Failure: Swift.Error>: LoadingStateProtocol {
+    public var asLoadingState: LoadingState<Output, Failure> { self }
+
+    public typealias LoadingOutput = Output
+    public typealias LoadingFailure = Failure
+
     case loading
     case loaded(Output)
     case failure(Failure)
@@ -36,3 +48,27 @@ public extension LoadingState {
 }
 
 extension LoadingState: Equatable where Output: Equatable, Failure: Equatable {}
+
+public extension LoadingState {
+    var loadingPublisher: AnyLoadingPublisher<Output, Failure> {
+        switch self {
+        case let .failure(error): return .failure(error)
+        case let .loaded(output): return .loaded(output)
+        case .loading: return .loading()
+        }
+    }
+
+    var publisher: AnyPublisher<Output, Failure> {
+        switch self {
+        case let .failure(error):
+            return Fail<Output, Failure>(error: error).eraseToAnyPublisher()
+
+        case let .loaded(value):
+            return Just<Output>(value).setFailureType(to: Failure.self).eraseToAnyPublisher()
+
+        case .loading:
+            return Empty(completeImmediately: false, outputType: Output.self, failureType: Failure.self)
+                .eraseToAnyPublisher()
+        }
+    }
+}

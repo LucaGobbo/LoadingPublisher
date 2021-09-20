@@ -1,10 +1,9 @@
 //
-//  File.swift
+//  AnyLoadingPublisher.swift
 //
 //
 //  Created by Luca Gobbo on 26/01/2021.
 //
-
 import Combine
 import Foundation
 
