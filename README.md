@@ -51,4 +51,4 @@ A publisher can easily be converted into an `AnyLoadingPublisher` by calling `er
     }
 ``` 
 
-LoadingPublisher also adds operators on `AnyLoadingPublisher`, `mapLoadingOutput`, `isLoading`, `flatMapLatestLoading`, `dematerializeLoadingState` and more. It also adds the `LoadingPublishers` namespace where we've defined some default Publishers like `Zip`, `CombineLatests`. New ones can be requested when needed
+LoadingPublisher also adds operators on `AnyLoadingPublisher`, `mapLoadingOutput`, `isLoading`, `flatMapLatestLoading`, `dematerializeLoadingState` and more. It also adds the `LoadingPublishers` namespace where we've defined some default Publishers like `Zip`, `CombineLatests`.
