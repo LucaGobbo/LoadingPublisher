@@ -8,9 +8,12 @@
 import Combine
 import Foundation
 
+// swiftlint:disable identifier_name
+
+@available(macOS 12.0, *)
+@available(iOS 14.0, *)
 public extension LoadingPublishers {
     /// A publisher that receives and combines the latest elements from two publishers.
-
     struct CombineLatest<A, B>: Publisher
         where A: Publisher, B: Publisher,
         A.Failure == B.Failure,
@@ -19,23 +22,19 @@ public extension LoadingPublishers {
         B.Output: LoadingStateProtocol,
         A.Output.LoadingFailure == B.Output.LoadingFailure
     {
-        /// The kind of values published by this publisher.
-        ///
-        /// This publisher produces two-element tuples of the upstream publishers' output types.
+        // MARK: - Types
+
         public typealias Output = LoadingState<(A.Output.LoadingOutput, B.Output.LoadingOutput), LoadingFailure>
-
         public typealias LoadingFailure = A.Output.LoadingFailure
-
         public typealias LoadingOutput = Output.LoadingOutput
-
-        /// The kind of errors this publisher might publish.
-        ///
-        /// This publisher produces the failure type shared by its upstream publishers.
         public typealias Failure = Never
 
-        public let a: A
+        // MARK: - Properties
 
+        public let a: A
         public let b: B
+
+        // MARK: - init
 
         /// Creates a publisher that receives and combines the latest elements from two publishers.
         /// - Parameters:
@@ -46,36 +45,27 @@ public extension LoadingPublishers {
             self.b = b
         }
 
-        public func receive<S>(subscriber: S)
-            where S: Subscriber,
-            Never == S.Failure, LoadingState<(A.Output.LoadingOutput, B.Output.LoadingOutput), LoadingFailure> == S.Input
-        {
+        // MARK: - Publisher
+
+        public func receive<S>(subscriber: S) where S: Subscriber, S.Failure == Never, S.Input == Output {
             Publishers.CombineLatest(a, b)
-                .setFailureType(to: LoadingFailure.self)
-                .flatMap(transform(lhs: rhs:))
-                .map(\.output)
-                .catch(transform(error:))
+                .flatMap(transform(lhs:rhs:))
                 .receive(subscriber: subscriber)
         }
 
-        private enum State {
-            case loading
-            case value(Output.LoadingOutput)
+        // MARK: Private
 
-            var output: Output {
-                switch self {
-                case .loading: return .loading
-                case let .value(output): return .loaded(output)
-                }
+        private func transform(lhs: A.Output, rhs: B.Output) -> AnyPublisher<Output, Never> {
+            switch (lhs.asLoadingState, rhs.asLoadingState) {
+            case let (.loaded(lhs), .loaded(rhs)): return .loaded((lhs, rhs))
+
+            case let (.failure(error), _): return .failure(error)
+            case let (_, .failure(error)): return .failure(error)
+            default: return .loading()
             }
         }
+    }
 
-        private func transform(lhs: A.Output, rhs: B.Output) -> AnyPublisher<State, LoadingFailure> {
-            switch (lhs.asLoadingState, rhs.asLoadingState) {
-            case let (.loaded(lhs), .loaded(rhs)):
-                return Just(State.value((lhs, rhs)))
-                    .setFailureType(to: LoadingFailure.self)
-                    .eraseToAnyPublisher()
 
             case let (.failure(error), _):
                 return Fail(outputType: State.self, failure: error).eraseToAnyPublisher()
