@@ -66,23 +66,150 @@ public extension LoadingPublishers {
         }
     }
 
+    /// A publisher that receives and combines the latest elements from three publishers.
+    struct CombineLatest3<A, B, C>: Publisher
+        where A: Publisher, B: Publisher, C: Publisher,
+        A.Output: LoadingStateProtocol,
+        B.Output: LoadingStateProtocol,
+        C.Output: LoadingStateProtocol,
+        A.Failure == B.Failure,
+        A.Failure == C.Failure,
+        A.Failure == Never,
+        A.Output.LoadingFailure == B.Output.LoadingFailure,
+        A.Output.LoadingFailure == C.Output.LoadingFailure
+    {
+        // MARK: - Types
 
-            case let (.failure(error), _):
-                return Fail(outputType: State.self, failure: error).eraseToAnyPublisher()
+        public typealias Output = LoadingState<
+            (A.Output.LoadingOutput, B.Output.LoadingOutput, C.Output.LoadingOutput),
+            LoadingFailure
+        >
+        public typealias LoadingFailure = A.Output.LoadingFailure
+        public typealias LoadingOutput = Output.LoadingOutput
+        public typealias Failure = Never
 
-            case let (_, .failure(error)):
-                return Fail(outputType: State.self, failure: error).eraseToAnyPublisher()
+        // MARK: - Properties
 
-            default:
-                return Just(State.loading)
-                    .setFailureType(to: LoadingFailure.self)
-                    .eraseToAnyPublisher()
-            }
+        public let a: A
+        public let b: B
+        public let c: C
+
+        // MARK: - init
+
+        /// Creates a publisher that receives and combines the latest elements from two publishers.
+        /// - Parameters:
+        ///   - a: The first upstream publisher.
+        ///   - b: The second upstream publisher.
+        ///   - c: The third upstream publisher.
+        public init(_ a: A, _ b: B, _ c: C) {
+            self.a = a
+            self.b = b
+            self.c = c
         }
 
-        private func transform(error: LoadingPublishers.CombineLatest<A, B>.LoadingFailure) -> AnyPublisher<Output, Failure> {
-            let state = LoadingState<Output.LoadingOutput, Output.LoadingFailure>.failure(error)
-            return Just(state).eraseToAnyPublisher()
+        // MARK: - Publisher
+
+        public func receive<S>(subscriber: S) where S: Subscriber, S.Failure == Never, S.Input == Output {
+            Publishers.CombineLatest3(a, b, c)
+                .flatMap(transform)
+                .receive(subscriber: subscriber)
+        }
+
+        // MARK: Private
+
+        private func transform(a: A.Output, b: B.Output, c: C.Output) -> AnyPublisher<Output, Never> {
+            switch (a.asLoadingState, b.asLoadingState, c.asLoadingState) {
+            case let (.loaded(a), .loaded(b), .loaded(c)): return .loaded((a, b, c))
+
+            case let (.failure(error), _, _): return .failure(error)
+            case let (_, .failure(error), _): return .failure(error)
+            case let (_, _, .failure(error)): return .failure(error)
+
+            default: return .loading()
+            }
+        }
+    }
+
+    /// A publisher that receives and combines the latest elements from four publishers.
+    struct CombineLatest4<A, B, C, D>: Publisher
+        where
+        A: Publisher,
+        B: Publisher,
+        C: Publisher,
+        D: Publisher,
+
+        A.Failure == Never,
+
+        A.Output: LoadingStateProtocol,
+        B.Output: LoadingStateProtocol,
+        C.Output: LoadingStateProtocol,
+        D.Output: LoadingStateProtocol,
+
+        A.Failure == B.Failure,
+        A.Failure == C.Failure,
+        A.Failure == D.Failure,
+
+        A.Output.LoadingFailure == B.Output.LoadingFailure,
+        A.Output.LoadingFailure == C.Output.LoadingFailure,
+        A.Output.LoadingFailure == D.Output.LoadingFailure
+    {
+        // MARK: - Types
+
+        public typealias Output = LoadingState<
+            (
+                A.Output.LoadingOutput,
+                B.Output.LoadingOutput,
+                C.Output.LoadingOutput,
+                D.Output.LoadingOutput
+            ),
+            LoadingFailure
+        >
+
+        public typealias LoadingFailure = A.Output.LoadingFailure
+        public typealias LoadingOutput = Output.LoadingOutput
+        public typealias Failure = Never
+
+        // MARK: - Properties
+
+        public let a: A
+        public let b: B
+        public let c: C
+        public let d: D
+
+        // MARK: - init
+
+        /// Creates a publisher that receives and combines the latest elements from two publishers.
+        /// - Parameters:
+        ///   - a: The first upstream publisher.
+        ///   - b: The second upstream publisher.
+        public init(_ a: A, _ b: B, _ c: C, _ d: D) {
+            self.a = a
+            self.b = b
+            self.c = c
+            self.d = d
+        }
+
+        // MARK: - Publisher
+
+        public func receive<S>(subscriber: S) where S: Subscriber, S.Failure == Never, S.Input == Output {
+            Publishers.CombineLatest4(a, b, c, d)
+                .flatMap(transform)
+                .receive(subscriber: subscriber)
+        }
+
+        // MARK: Private
+
+        private func transform(a: A.Output, b: B.Output, c: C.Output, d: D.Output) -> AnyPublisher<Output, Never> {
+            switch (a.asLoadingState, b.asLoadingState, c.asLoadingState, d.asLoadingState) {
+            case let (.loaded(a), .loaded(b), .loaded(c), .loaded(d)): return .loaded((a, b, c, d))
+
+            case let (.failure(error), _, _, _): return .failure(error)
+            case let (_, .failure(error), _, _): return .failure(error)
+            case let (_, _, .failure(error), _): return .failure(error)
+            case let (_, _, _, .failure(error)): return .failure(error)
+
+            default: return .loading()
+            }
         }
     }
 }
