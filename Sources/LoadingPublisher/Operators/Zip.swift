@@ -10,7 +10,6 @@ import Foundation
 
 // swiftlint:disable identifier_name
 
-
 public extension LoadingPublishers {
     /// A publisher created by applying the zip function to two upstream publishers. Where both of them are loading
     /// pubishers
@@ -74,7 +73,6 @@ public extension LoadingPublishers {
         }
 
         // MARK: Private
-
 
         private enum State {
             case loading
