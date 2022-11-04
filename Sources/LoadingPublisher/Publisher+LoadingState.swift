@@ -38,6 +38,56 @@ public extension Publisher where Failure == Never {
         map(\.isLoading).eraseToAnyPublisher()
     }
 
+    func loadingReplaceEmpty<LoadingOutput, LoadingError: Swift.Error>(
+        with error: LoadingError
+    ) -> AnyLoadingPublisher<LoadingOutput, LoadingError>
+        where Output == LoadingState<LoadingOutput, LoadingError>, LoadingOutput: Collection
+    {
+        flatMapLoadingOutput { (output: LoadingOutput) -> AnyPublisher<LoadingOutput, LoadingError> in
+            guard !output.isEmpty else {
+                return Fail<LoadingOutput, LoadingError>(error: error).eraseToAnyPublisher()
+            }
+            return Just(output).setFailureType(to: LoadingError.self).eraseToAnyPublisher()
+        }
+    }
+
+    func loadingReplaceNil<LoadingOutput, LoadingError: Swift.Error>(
+        with error: LoadingError
+    ) -> AnyLoadingPublisher<LoadingOutput, LoadingError>
+        where Output == LoadingState<LoadingOutput?, LoadingError>
+    {
+        flatMapLoadingOutput { (output: LoadingOutput?) -> AnyPublisher<LoadingOutput, LoadingError> in
+            guard let output = output else {
+                return Fail<LoadingOutput, LoadingError>(error: error).eraseToAnyPublisher()
+            }
+            return Just(output).setFailureType(to: LoadingError.self).eraseToAnyPublisher()
+        }
+    }
+
+    func flatMapLoadingOutput<NewOutput, LoadingOutput, LoadingError: Swift.Error>(
+        _ transform: @escaping ((LoadingOutput) -> AnyPublisher<NewOutput, LoadingError>)
+    ) -> AnyLoadingPublisher<NewOutput, LoadingError>
+        where Output == LoadingState<LoadingOutput, LoadingError>
+    {
+        flatMap { element -> AnyLoadingPublisher<NewOutput, LoadingError> in
+
+            switch element {
+            case .loading: return .loading()
+            case let .failure(error): return .failure(error)
+            case let .loaded(value): return transform(value).eraseToAnyLoadingPublisher(prepend: false)
+            }
+        }
+        .eraseToAnyPublisher()
+    }
+
+    func replaceLoadingOutput<NewOutput, LoadingOutput, LoadingError: Swift.Error>(
+        replaceWith element: NewOutput
+    ) -> AnyLoadingPublisher<NewOutput, LoadingError>
+        where Output == LoadingState<LoadingOutput, LoadingError>
+    {
+        mapLoadingOutput { _ in element }.eraseToAnyPublisher()
+    }
+
     /// apply a transform on the loading value
     func mapLoadingOutput<NewOutput, LoadingOutput, LoadingError: Swift.Error>(
         _ transform: @escaping ((LoadingOutput) -> NewOutput)
@@ -52,6 +102,12 @@ public extension Publisher where Failure == Never {
             }
         }
         .eraseToAnyPublisher()
+    }
+
+    func toOptionalLoadingOutput<LoadingOutput, LoadingError: Swift.Error>() -> AnyLoadingPublisher<LoadingOutput?, LoadingError>
+        where Output == LoadingState<LoadingOutput, LoadingError>
+    {
+        mapLoadingOutput { value -> LoadingOutput? in value }.eraseToAnyPublisher()
     }
 
     /// transform a failure to another failure
