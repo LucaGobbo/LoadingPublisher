@@ -25,16 +25,14 @@ public extension Publisher where Failure == Never {
     }
 
     /// ignore's value & loading state, and only outputs failures
-    func failures<LoadingOutput, LoadingError: Swift.Error>()
-        -> AnyPublisher<LoadingError, Never>
+    func failures<LoadingOutput, LoadingError: Swift.Error>() -> AnyPublisher<LoadingError, Never>
         where Output == LoadingState<LoadingOutput, LoadingError>
     {
         compactMap(\.failure).eraseToAnyPublisher()
     }
 
     /// ignores value & error state, and only outputs if the current publisher is loading
-    func isLoading<LoadingOutput, LoadingError: Swift.Error>()
-        -> AnyPublisher<Bool, Never>
+    func isLoading<LoadingOutput, LoadingError: Swift.Error>() -> AnyPublisher<Bool, Never>
         where Output == LoadingState<LoadingOutput, LoadingError>
     {
         map(\.isLoading).eraseToAnyPublisher()
@@ -42,12 +40,11 @@ public extension Publisher where Failure == Never {
 
     /// apply a transform on the loading value
     func mapLoadingOutput<NewOutput, LoadingOutput, LoadingError: Swift.Error>(
-        _ transform: @escaping ((LoadingOutput) -> NewOutput))
-        -> AnyLoadingPublisher<NewOutput, LoadingError>
+        _ transform: @escaping ((LoadingOutput) -> NewOutput)
+    ) -> AnyLoadingPublisher<NewOutput, LoadingError>
         where Output == LoadingState<LoadingOutput, LoadingError>
     {
         map { element in
-
             switch element {
             case .loading: return .loading
             case let .failure(error): return .failure(error)
@@ -57,9 +54,10 @@ public extension Publisher where Failure == Never {
         .eraseToAnyPublisher()
     }
 
+    /// transform a failure to another failure
     func mapLoadingFailure<NewFailure: Error, LoadingOutput, LoadingError: Swift.Error>(
-        _ transform: @escaping ((LoadingError) -> NewFailure))
-        -> AnyLoadingPublisher<LoadingOutput, NewFailure>
+        _ transform: @escaping ((LoadingError) -> NewFailure)
+    ) -> AnyLoadingPublisher<LoadingOutput, NewFailure>
         where Output == LoadingState<LoadingOutput, LoadingError>
     {
         map { element in
