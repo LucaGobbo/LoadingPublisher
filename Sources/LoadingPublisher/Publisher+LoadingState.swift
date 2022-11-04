@@ -38,19 +38,8 @@ public extension Publisher where Failure == Never {
         map(\.isLoading).eraseToAnyPublisher()
     }
 
-    func loadingReplaceEmpty<LoadingOutput, LoadingError: Swift.Error>(
-        with error: LoadingError
-    ) -> AnyLoadingPublisher<LoadingOutput, LoadingError>
-        where Output == LoadingState<LoadingOutput, LoadingError>, LoadingOutput: Collection
-    {
-        flatMapLoadingOutput { (output: LoadingOutput) -> AnyPublisher<LoadingOutput, LoadingError> in
-            guard !output.isEmpty else {
-                return Fail<LoadingOutput, LoadingError>(error: error).eraseToAnyPublisher()
-            }
-            return Just(output).setFailureType(to: LoadingError.self).eraseToAnyPublisher()
-        }
-    }
-
+    /// Replaces nil values with an error
+    /// - Parameter error: the error to replace the nil value with
     func loadingReplaceNil<LoadingOutput, LoadingError: Swift.Error>(
         with error: LoadingError
     ) -> AnyLoadingPublisher<LoadingOutput, LoadingError>
@@ -64,6 +53,7 @@ public extension Publisher where Failure == Never {
         }
     }
 
+    /// flatMap the a loading value to a new publisher
     func flatMapLoadingOutput<NewOutput, LoadingOutput, LoadingError: Swift.Error>(
         _ transform: @escaping ((LoadingOutput) -> AnyPublisher<NewOutput, LoadingError>)
     ) -> AnyLoadingPublisher<NewOutput, LoadingError>
@@ -80,6 +70,7 @@ public extension Publisher where Failure == Never {
         .eraseToAnyPublisher()
     }
 
+    /// replaces a loading element with a new element
     func replaceLoadingOutput<NewOutput, LoadingOutput, LoadingError: Swift.Error>(
         replaceWith element: NewOutput
     ) -> AnyLoadingPublisher<NewOutput, LoadingError>
@@ -104,6 +95,7 @@ public extension Publisher where Failure == Never {
         .eraseToAnyPublisher()
     }
 
+    /// makes the current `LoadingOutput` optional
     func toOptionalLoadingOutput<LoadingOutput, LoadingError: Swift.Error>() -> AnyLoadingPublisher<LoadingOutput?, LoadingError>
         where Output == LoadingState<LoadingOutput, LoadingError>
     {
