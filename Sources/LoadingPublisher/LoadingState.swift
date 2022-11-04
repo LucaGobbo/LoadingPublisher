@@ -7,40 +7,48 @@
 import Combine
 import Foundation
 
-/// Represents loading state of a value. Element of LoadingSignal.
+/// We can type erase a ``LoadingState`` to this protocol, when we need to have a less concrete type
 public protocol LoadingStateProtocol {
     associatedtype LoadingOutput
     associatedtype LoadingFailure: Error
     var asLoadingState: LoadingState<LoadingOutput, LoadingFailure> { get }
 }
 
+/// Represents loading state of a value. used by ``AnyLoadingPublisher``
 public enum LoadingState<Output, Failure: Swift.Error>: LoadingStateProtocol {
     public var asLoadingState: LoadingState<Output, Failure> { self }
 
     public typealias LoadingOutput = Output
     public typealias LoadingFailure = Failure
 
+    /// indicates the publisher is currently loading something from somewhere
     case loading
+    /// indicates the publisher has completed with a `Output` value
     case loaded(Output)
+    /// indicates the publisher has failed with some `Failure`
     case failure(Failure)
 }
 
 public extension LoadingState {
+    /// check if the state is in a loading state
     var isLoading: Bool {
         guard case .loading = self else { return false }
         return true
     }
 
+    /// quickly get the output out of the current state
     var output: Output? {
         guard case let .loaded(output) = self else { return nil }
         return output
     }
 
+    /// quickly get the failure out of the current state
     var failure: Failure? {
         guard case let .failure(failure) = self else { return nil }
         return failure
     }
 
+    /// check if the state is loaded
     var loaded: Bool {
         guard case .loaded = self else { return false }
         return true
@@ -50,6 +58,7 @@ public extension LoadingState {
 extension LoadingState: Equatable where Output: Equatable, Failure: Equatable {}
 
 public extension LoadingState {
+    /// convert a ``LoadingState`` into a ``AnyLoadingPublisher``
     var loadingPublisher: AnyLoadingPublisher<Output, Failure> {
         switch self {
         case let .failure(error): return .failure(error)
@@ -58,6 +67,8 @@ public extension LoadingState {
         }
     }
 
+    /// convert a ``LoadingState`` into a regular `AnyPublisher` where the `Output` equals the Output of the loading
+    /// state, and the Failure of the publisher equals the ``LoadingState``'s failure type
     var publisher: AnyPublisher<Output, Failure> {
         switch self {
         case let .failure(error):

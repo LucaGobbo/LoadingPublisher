@@ -40,6 +40,7 @@ public extension Publisher where Failure == Never {
         map(\.isLoading).eraseToAnyPublisher()
     }
 
+    /// apply a transform on the loading value
     func mapLoadingOutput<NewOutput, LoadingOutput, LoadingError: Swift.Error>(
         _ transform: @escaping ((LoadingOutput) -> NewOutput))
         -> AnyLoadingPublisher<NewOutput, LoadingError>
@@ -72,6 +73,7 @@ public extension Publisher where Failure == Never {
         .eraseToAnyPublisher()
     }
 
+    /// transform any loaded value to a new publisher using the transform closure
     func flatMapLatestLoading<NewOutput, LoadingOutput, LoadingError: Swift.Error>(
         _ transform: @escaping ((LoadingOutput) -> AnyLoadingPublisher<NewOutput, LoadingError>))
         -> AnyLoadingPublisher<NewOutput, LoadingError>
