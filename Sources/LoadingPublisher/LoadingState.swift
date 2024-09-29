@@ -55,6 +55,8 @@ public extension LoadingState {
     }
 }
 
+extension LoadingState: Hashable where Output: Hashable, Failure: Hashable {}
+extension LoadingState: Sendable where Output: Sendable, Failure: Sendable {}
 extension LoadingState: Equatable where Output: Equatable, Failure: Equatable {}
 
 public extension LoadingState {
